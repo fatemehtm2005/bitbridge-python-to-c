@@ -9,7 +9,7 @@ An educational, source-to-source compiler project that translates a documented s
 - Integer, float, Boolean, and string literals
 - Variables and assignment
 - Arithmetic, comparison, Boolean, and unary operators
-- `print(...)`
+- `print(...)`, including multiple positional values and `sep` / `end`
 - `if` / `elif` / `else`
 - `while` loops, `for ... in range(...)`, `break`, and `continue`
 - Functions with positional arguments and `return`

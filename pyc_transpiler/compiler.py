@@ -109,7 +109,10 @@ class CGenerator:
             name = self.ident(node.target.id)
             self.emit(f"{name} = {op}({name}, {self.expr(node.value)});")
         elif isinstance(node, ast.Expr):
-            self.emit(f"{self.expr(node.value)};")
+            if isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name) and node.value.func.id == "print":
+                self.emit_print(node.value)
+            else:
+                self.emit(f"{self.expr(node.value)};")
         elif isinstance(node, ast.If):
             self.emit(f"if ({self.condition(node.test)}) {{")
             self.block(node.body)
@@ -158,6 +161,20 @@ class CGenerator:
         if node.orelse:
             raise CompileError("loop else clauses are not supported", node)
 
+    def emit_print(self, node: ast.Call) -> None:
+        """Generate Python-like print output for positional arguments and sep/end."""
+        allowed_keywords = {keyword.arg for keyword in node.keywords}
+        if None in allowed_keywords or not allowed_keywords <= {"sep", "end"}:
+            raise CompileError("print only supports the sep and end keyword arguments", node)
+        keywords = {keyword.arg: keyword.value for keyword in node.keywords}
+        separator = self.expr(keywords["sep"]) if "sep" in keywords else 'py_str(" ")'
+        ending = self.expr(keywords["end"]) if "end" in keywords else 'py_str("\\n")'
+        for position, argument in enumerate(node.args):
+            if position:
+                self.emit(f"py_print({separator});")
+            self.emit(f"py_print({self.expr(argument)});")
+        self.emit(f"py_print({ending});")
+
     def block(self, statements: Iterable[ast.stmt]) -> None:
         self.indent += 1
         for statement in statements:
@@ -204,9 +221,7 @@ class CGenerator:
             if not isinstance(node.func, ast.Name) or node.keywords:
                 raise CompileError("only direct positional function calls are supported", node)
             if node.func.id == "print":
-                if len(node.args) != 1:
-                    raise CompileError("print accepts exactly one argument in this version", node)
-                return f"(py_print({self.expr(node.args[0])}), printf(\"\\n\"), py_none())"
+                raise CompileError("print is only valid as a standalone statement", node)
             if node.func.id not in self.function_names:
                 raise CompileError(f"unsupported function '{node.func.id}'", node)
             return f"{self.ident(node.func.id)}({', '.join(self.expr(arg) for arg in node.args)})"

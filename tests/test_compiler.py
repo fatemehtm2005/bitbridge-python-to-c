@@ -37,6 +37,16 @@ for index in range(3):
         self.assertIn('quote:', c_source)
         self.assertIn('\\\\n', c_source)
 
+    def test_print_supports_multiple_values_and_separator(self):
+        c_source = compile_source('print("value", 3, sep="-")\n')
+        # One runtime function declaration plus two values, separator, and terminator.
+        self.assertEqual(c_source.count("py_print("), 5)
+        self.assertIn('py_str("-")', c_source)
+
+    def test_rejects_print_nested_in_expression(self):
+        with self.assertRaisesRegex(CompileError, "standalone statement"):
+            compile_source("value = print(1)\n")
+
 
 if __name__ == "__main__":
     unittest.main()
