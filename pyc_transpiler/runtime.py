@@ -45,4 +45,25 @@ static void py_print(PyValue x) {
   else if (x.tag == PY_NONE) printf("None");
   else printf("%lld", x.i);
 }
+static PyValue py_input(PyValue prompt) {
+  char buffer[4096];
+  py_print(prompt); fflush(stdout);
+  if (!fgets(buffer, sizeof(buffer), stdin)) return py_str("");
+  buffer[strcspn(buffer, "\\r\\n")] = '\\0';
+  char *out = malloc(strlen(buffer) + 1);
+  if (!out) { fputs("out of memory\\n", stderr); exit(2); }
+  strcpy(out, buffer); return py_str(out);
+}
+static PyValue py_len(PyValue x) {
+  if (x.tag == PY_STR) return py_int((long long)strlen(x.s));
+  fputs("len only supports strings in this version\\n", stderr); exit(2);
+}
+static PyValue py_to_int(PyValue x) {
+  if (x.tag == PY_STR) return py_int(strtoll(x.s, NULL, 10));
+  return py_int((long long)py_num(x));
+}
+static PyValue py_to_float(PyValue x) {
+  if (x.tag == PY_STR) return py_float(strtod(x.s, NULL));
+  return py_float(py_num(x));
+}
 '''

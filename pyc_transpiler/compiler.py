@@ -218,10 +218,24 @@ class CGenerator:
         if isinstance(node, ast.Compare):
             return f"py_bool({self.condition(node)})"
         if isinstance(node, ast.Call):
-            if not isinstance(node.func, ast.Name) or node.keywords:
+            if not isinstance(node.func, ast.Name):
                 raise CompileError("only direct positional function calls are supported", node)
             if node.func.id == "print":
                 raise CompileError("print is only valid as a standalone statement", node)
+            if node.func.id == "input":
+                if node.keywords or len(node.args) > 1:
+                    raise CompileError("input accepts zero or one positional argument", node)
+                prompt = self.expr(node.args[0]) if node.args else 'py_str("")'
+                return f"py_input({prompt})"
+            builtins = {"len": "py_len", "int": "py_to_int", "float": "py_to_float", "bool": "py_bool"}
+            if node.func.id in builtins:
+                if node.keywords or len(node.args) != 1:
+                    raise CompileError(f"{node.func.id} accepts exactly one positional argument", node)
+                if node.func.id == "bool":
+                    return f"py_bool(py_truth({self.expr(node.args[0])}))"
+                return f"{builtins[node.func.id]}({self.expr(node.args[0])})"
+            if node.keywords:
+                raise CompileError("only direct positional function calls are supported", node)
             if node.func.id not in self.function_names:
                 raise CompileError(f"unsupported function '{node.func.id}'", node)
             return f"{self.ident(node.func.id)}({', '.join(self.expr(arg) for arg in node.args)})"

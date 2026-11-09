@@ -10,6 +10,7 @@ An educational, source-to-source compiler project that translates a documented s
 - Variables and assignment
 - Arithmetic, comparison, Boolean, and unary operators
 - `print(...)`, including multiple positional values and `sep` / `end`
+- `input()` / `input(prompt)`, `len(string)`, `int(value)`, `float(value)`, and `bool(value)`
 - `if` / `elif` / `else`
 - `while` loops, `for ... in range(...)`, `break`, and `continue`
 - Functions with positional arguments and `return`
