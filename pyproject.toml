@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-to-c-transpiler"
+version = "0.1.0"
+description = "A documented-subset Python to C11 transpiler with behavioral verification"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+[project.scripts]
+pyc-transpiler = "pyc_transpiler.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["pyc_transpiler*"]
